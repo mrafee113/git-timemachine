@@ -1,6 +1,0 @@
-commit_map = {k.encode(): v.encode() for k, v in commit_map.items()}
-dt = commit_map.get(commit.original_id, None)
-if dt is None:
-    return
-commit.author_date = dt
-commit.committer_date = dt
