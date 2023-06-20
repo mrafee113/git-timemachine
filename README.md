@@ -16,8 +16,7 @@ chmod +x run.sh
 #   -st, --start-date      : Start date, required
 #   -ed, --end-date        : End date, required
 #   -m,  --minimum-commits : Minimum commits, optional (default: 0)
-#   -t,  --timezone        : Timezone, optional
 
-path/to/run.sh -sd '2020-01-01' -ed '2021-02-01' -m 2 -t "Asia/Tehran" path/to/project
+path/to/run.sh -sd '2020-01-01' -ed '2021-02-01' -m 2 path/to/project
 path/to/run.sh -sd '2020-01-01' -ed '2021-02-01' path/to/project
 ```

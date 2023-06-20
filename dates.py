@@ -1,5 +1,3 @@
-import json
-import pytz
 import argparse
 
 from random import randint
@@ -16,10 +14,8 @@ def parse_args():
                         required=True, help="start-date (format: YYYY-MM-DD)")
     parser.add_argument('-ed', '--end-date', type=lambda d: datetime.strptime(d, '%Y-%m-%d').date(),
                         required=True, help="end-date (format: YYYY-MM-DD)")
-    parser.add_argument('-t', '--timezone', type=str, required=False,
-                        help='the timezone for the dates. default is UTC.')
     args = parser.parse_args()
-    n, sd, ed, m, t = args.number_of_files, args.start_date, args.end_date, args.min_commits_per_day, args.timezone
+    n, sd, ed, m = args.number_of_files, args.start_date, args.end_date, args.min_commits_per_day
 
     if m is None or not m:
         m = 0
@@ -29,12 +25,7 @@ def parse_args():
         except (TypeError, ValueError):
             m = 0
 
-    try:
-        timezone = pytz.timezone(t)
-    except pytz.UnknownTimeZoneError:
-        timezone = None
-
-    return n, sd, ed, m, timezone
+    return n, sd, ed, m
 
 
 def select_rand_time() -> dtime:
@@ -46,13 +37,12 @@ def select_rand_time() -> dtime:
     )
 
 
-def renew_datetime(day: date, timezone=None):
-    dt = datetime.combine(day, select_rand_time())
-    if timezone is not None:
-        timezone = pytz.timezone(timezone)
-        return timezone.localize(dt)
-
-    return dt
+def renew_datetime(day: date):
+    return datetime.combine(
+        day,
+        select_rand_time(),
+        datetime.now().astimezone().tzinfo
+    )
 
 
 def space_out(number_of_files: int, start_date: date, end_date: date, min_commits_per_day: int = 0) -> list[date]:
@@ -99,10 +89,10 @@ def export(dates: list[datetime]):
 
 
 def main():
-    number_of_files, start_date, end_date, min_commits_per_day, timezone = parse_args()
+    number_of_files, start_date, end_date, min_commits_per_day = parse_args()
 
     dates = space_out(number_of_files, start_date, end_date, min_commits_per_day)
-    dates = [renew_datetime(dt, timezone) for dt in dates]
+    dates = [renew_datetime(dt) for dt in dates]
     dates.sort()
     export(dates)
 

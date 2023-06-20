@@ -1,13 +1,12 @@
 #!/bin/bash
 
 display_usage() {
-  echo "Usage: $0 WD -st START_DATE -ed END_DATE [-m MIN_COMMITS] [-t TIMEZONE]"
+  echo "Usage: $0 WD -st START_DATE -ed END_DATE [-m MIN_COMMITS]"
   echo "Arguments:"
   echo "  WD                     : Positional argument, required"
   echo "  -st, --start-date      : Start date, required"
   echo "  -ed, --end-date        : End date, required"
   echo "  -m,  --minimum-commits : Minimum commits, optional (default: 0)"
-  echo "  -t,  --timezone        : Timezone, optional"
 }
 
 # parse arguments
@@ -23,10 +22,6 @@ while [[ $# -gt 0 ]]; do
     ;;
   -m | --minimum-commits)
     MIN_COMMITS=$2
-    shift 2
-    ;;
-  -t | --timezone)
-    TIMEZONE=$2
     shift 2
     ;;
   *)
@@ -56,32 +51,29 @@ find_git_files() {
     all_files_array+=("$line")
   done <<< "$all_files"
 
-  local ignored=()
+  local ignored=""
   while read -r file; do
     if git -C "$WD" check-ignore -q "$file"; then
-      ignored+=("$file")
+      ignored+="$file|"
     fi
   done <<< "$all_files"
 
-  local unchanged=()
+  local unchanged=""
   while read -r file; do
     if [ -z "$(git -C "$WD" status --porcelain "$file")" ]; then
-      unchanged+=("$file")
+      unchanged+="$file|"
     fi
   done <<< "$all_files"
 
-  # remove files from all_files_array
-  for file in "${ignored[@]}"; do
-    all_files_array=("${all_files_array[@]/$file}")
-  done
-  for file in "${unchanged[@]}"; do
-    all_files_array=("${all_files_array[@]/$file}")
-  done
-
-  # remove empty elements and duplicates
-  # shellcheck disable=SC2207
-  all_files_array=($(echo "${all_files_array[@]}" | tr ' ' '\n' | sort -u))
-  result=$(printf "%s\n" "${all_files_array[@]}")
+  # remove files from all_files_array: super bad algorithm. In my defense, it was chatGPT :))
+  all_files_file=$(mktemp)
+  ignored_file=$(mktemp)
+  unchanged_file=$(mktemp)
+  echo "$all_files" > "$all_files_file"
+  echo "$ignored" > "$ignored_file"
+  echo "$unchanged" > "$unchanged_file"
+  result=$(python3 "$ROOT_DIR/exclude_strings.py" "$all_files_file" "$ignored_file" "$unchanged_file")
+  rm "$all_files_file" "$ignored_file" "$unchanged_file"
   echo "$result"
 }
 
@@ -96,8 +88,9 @@ find_git_files() {
 files=$(find_git_files)
 file_count=$(echo "$files" | wc -l)
 file_count=$((file_count + 5))  # THIS IS BECAUSE BASH IS UNPREDICTABLE. MF'ER RANDOMLY LOST ME TWO DATETIMES.
+# It's not because I don't know bash, at ALL :D
 
-OUTPUT=$(python3 "$ROOT_DIR/dates.py" -n "$file_count" -sd "$START_DATE" -ed "$END_DATE" -m "$MIN_COMMITS" -t "$TIMEZONE")
+OUTPUT=$(python3 "$ROOT_DIR/dates.py" -n "$file_count" -sd "$START_DATE" -ed "$END_DATE" -m "$MIN_COMMITS")
 DATETIMES=()
 while read -r -d ' ' element; do
   DATETIMES+=("$element")
