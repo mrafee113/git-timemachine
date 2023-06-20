@@ -10,7 +10,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--number-of-files', type=int, required=True,
                         help='integer indicating the number of files')
-    parser.add_argument('-m', '--min-commits-per-day', type=int, required=False, default=0,
+    parser.add_argument('-m', '--min-commits-per-day', required=False, default=0,
                         help='integer indicating minimum number of commits per day')
     parser.add_argument('-sd', '--start-date', type=lambda d: datetime.strptime(d, '%Y-%m-%d').date(),
                         required=True, help="start-date (format: YYYY-MM-DD)")
@@ -18,7 +18,23 @@ def parse_args():
                         required=True, help="end-date (format: YYYY-MM-DD)")
     parser.add_argument('-t', '--timezone', type=str, required=False,
                         help='the timezone for the dates. default is UTC.')
-    return parser.parse_args()
+    args = parser.parse_args()
+    n, sd, ed, m, t = args.number_of_files, args.start_date, args.end_date, args.min_commits_per_day, args.timezone
+
+    if m is None or not m:
+        m = 0
+    else:
+        try:
+            m = int(m)
+        except (TypeError, ValueError):
+            m = 0
+
+    try:
+        timezone = pytz.timezone(t)
+    except pytz.UnknownTimeZoneError:
+        timezone = None
+
+    return n, sd, ed, m, timezone
 
 
 def select_rand_time() -> dtime:
@@ -83,10 +99,7 @@ def export(dates: list[datetime]):
 
 
 def main():
-    args = parse_args()
-    number_of_files, start_date, end_date, min_commits_per_day = args.number_of_files, args.start_date, args.end_date, \
-        args.min_commits_per_day
-    timezone = args.timezone
+    number_of_files, start_date, end_date, min_commits_per_day, timezone = parse_args()
 
     dates = space_out(number_of_files, start_date, end_date, min_commits_per_day)
     dates = [renew_datetime(dt, timezone) for dt in dates]
