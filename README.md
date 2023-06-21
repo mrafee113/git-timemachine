@@ -1,8 +1,3 @@
-### Requirements
-
-* git-filter-repo
-    * Ubuntu 22.10: `sudo apt install git-filter-repo`
-
 ### Description
 This project, is intended to warp (winks) git commit timestamps, therefore changing one's GitHub commit status.  
 * Example usage:
