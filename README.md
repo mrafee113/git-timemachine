@@ -15,3 +15,6 @@ chmod +x run.sh
 path/to/run.sh -sd '2020-01-01' -ed '2021-02-01' -m 2 path/to/project
 path/to/run.sh -sd '2020-01-01' -ed '2021-02-01' path/to/project
 ```
+
+### Disclaimer
+I used this to create repos for my old uni projects and commit files. but somehow the files were overwritten with jargon; the original files were lost; don't use this till I figure it out.
